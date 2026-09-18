@@ -1,0 +1,55 @@
+# Optional database service, layered on top of the production stack:
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.db.yml up -d
+#
+# For deployments that have no managed database yet. docker-compose.prod.yml on
+# its own expects an external endpoint; this file adds a MySQL container and
+# points the API at it. Moving to a managed instance later means dropping this
+# file from the command and setting DB_HOST, DB_USER and DB_PASS in .env.
+#
+# Only additions live here. Compose merges service definitions, so the API's
+# DB_HOST is overridden rather than duplicated.
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: taskmanager-db
+    restart: unless-stopped
+    # Defaults sized for a shared 8 GB host. This one has 1 GB, so the buffer
+    # pool is capped and the performance schema switched off; without this
+    # MySQL reserves several hundred megabytes it will never use here.
+    command: --innodb-buffer-pool-size=128M --performance-schema=OFF
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}"
+      MYSQL_DATABASE: "${DB_NAME:?set DB_NAME in .env}"
+      MYSQL_USER: "${DB_USER:?set DB_USER in .env}"
+      MYSQL_PASSWORD: "${DB_PASS:?set DB_PASS in .env}"
+    ports:
+      # Loopback only, so the host's mysql client and scripts/verify-api.sh can
+      # reach it while the network cannot. This is the address DB_HOST and
+      # DB_PORT in .env refer to; the API container uses the service name below.
+      - "127.0.0.1:${DB_PORT_HOST:-3307}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      # Schema only. Loading db/seed here would put accounts with published
+      # passwords on a public host.
+      - ./db/init/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  api:
+    environment:
+      # Service name on the Compose network, overriding the host-facing values
+      # in .env, which exist for CLI scripts running outside the containers.
+      DB_HOST: db
+      DB_PORT: "3306"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
