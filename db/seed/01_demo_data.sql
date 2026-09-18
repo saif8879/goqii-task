@@ -1,18 +1,17 @@
 -- DEVELOPMENT DATA ONLY. Never load this into a production database.
 --
--- Every account below shares the password "Password123". They exist so the app
+-- Each account has its own password, listed in the README. They exist so the app
 -- can be explored immediately, including the admin and non-admin views. A
 -- production deployment loads db/init only and creates its first admin with
 -- scripts/create-admin.php.
 
 INSERT INTO users (id, name, email, password_hash, role)
-VALUES (1, 'Saif Idrisi', 'saif@example.com',
-        '$2y$10$wHSOEc.ttpP0AQLut4Wcr.yagyFIYpOlvlhp916ehEYtwD8DvWali', 'admin'),
-       (2, 'Priya Sharma', 'priya@example.com',
-        '$2y$10$wHSOEc.ttpP0AQLut4Wcr.yagyFIYpOlvlhp916ehEYtwD8DvWali', 'user'),
-       (3, 'Rahul Verma', 'rahul@example.com',
-        '$2y$10$wHSOEc.ttpP0AQLut4Wcr.yagyFIYpOlvlhp916ehEYtwD8DvWali', 'user')
-ON DUPLICATE KEY UPDATE name = VALUES(name), role = VALUES(role);
+VALUES (1, 'Saif Idrisi', 'saifidrisi77@gmail.com',
+        '$2y$10$JP46WhxmusFW6u0zV6EZv.9.so4.hAna.Wh/1ukficaLjRkcZb5qm', 'admin'),
+       (2, 'Rahul Verma', 'rahul@wrap2earn.com',
+        '$2y$10$32yN0ZZGgK/cIZv8kHLbUeBYWIbd7qCKW13J3bK51.oGmoJ.mP1jO', 'user')
+ON DUPLICATE KEY UPDATE name = VALUES(name), email = VALUES(email),
+                        password_hash = VALUES(password_hash), role = VALUES(role);
 
 INSERT INTO tasks (title, description, status, priority, due_date, user_id)
 VALUES ('Set up project repository', 'Initialise the repo, add a README and the base folder structure.', 'done',
@@ -26,7 +25,7 @@ VALUES ('Set up project repository', 'Initialise the repo, add a README and the 
        ('Add client-side validation', 'Mirror the server rules so users get feedback before submitting.', 'todo',
         'medium', '2026-09-25', 2),
        ('Write API documentation', 'Document every route, the request body and the status codes it returns.', 'todo',
-        'low', '2026-09-28', 3),
+        'low', '2026-09-28', 2),
        ('Review error responses', 'Make sure validation failures return 422 with per-field messages.', 'todo', 'high',
-        '2026-09-24', 3),
+        '2026-09-24', 2),
        ('Clean up unused imports', NULL, 'todo', 'low', NULL, 1);

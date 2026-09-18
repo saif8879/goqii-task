@@ -26,9 +26,33 @@ CREATE TABLE IF NOT EXISTS tasks (
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    KEY idx_tasks_status (status),
-    KEY idx_tasks_user (user_id),
-    KEY idx_tasks_due_date (due_date),
+
+    -- Indexes are shaped around the list endpoint, which always filters and
+    -- always orders. Measurements behind every choice are in docs/schema.md.
+    --
+    -- The regular user's request: owner, optionally status, newest first. The
+    -- trailing created_at lets one index satisfy the filter and the sort
+    -- together, and its user_id prefix is what the foreign key below needs, so
+    -- no separate index on user_id is required.
+    KEY idx_tasks_owner_status_created (user_id, status, created_at),
+
+    -- The admin's request spans every owner, so it needs its own ordered
+    -- entry points. Without these, a status filter reads and sorts every
+    -- matching row just to return ten of them.
+    KEY idx_tasks_status_created (status, created_at),
+    KEY idx_tasks_priority_created (priority, created_at),
+    KEY idx_tasks_created (created_at),
+
+    -- Sorting by title is only survivable for an admin with an index: a
+    -- filesort over 500k VARCHAR(160) values spills to disk and takes tens of
+    -- seconds.
+    KEY idx_tasks_title (title),
+
+    -- Ordering puts undated tasks last via "due_date IS NULL, due_date", and
+    -- an expression in ORDER BY can only be served by a matching functional
+    -- index. Requires MySQL 8.0.13 or newer.
+    KEY idx_tasks_due_nulls_last ((due_date IS NULL), due_date),
+
     CONSTRAINT fk_tasks_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 

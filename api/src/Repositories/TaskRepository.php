@@ -64,8 +64,12 @@ class TaskRepository
                   FROM tasks t
                   JOIN users u ON u.id = t.user_id'
             . $where
-            // id is the tie-breaker so paging stays stable when sort values repeat.
-            . ' ORDER BY ' . $nullsLast . $column . ' ' . $direction . ', t.id DESC'
+            // id is the tie-breaker so paging stays stable when sort values
+            // repeat, and it follows the same direction as the sort column on
+            // purpose. An index can be walked forwards or backwards but not
+            // both at once, so mixing ASC and DESC here forces a filesort over
+            // the whole result set instead of an ordered index read.
+            . ' ORDER BY ' . $nullsLast . $column . ' ' . $direction . ', t.id ' . $direction
             . ' LIMIT :limit OFFSET :offset';
 
         $stmt = $this->db->prepare($sql);

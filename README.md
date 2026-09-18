@@ -7,6 +7,8 @@ with JWT authentication and role-based access control.
 - `web/` — React 19 single page app built with Vite and React Router
 - `db/init/` — schema. Safe to load into any environment
 - `db/seed/` — demo accounts and tasks. Development only
+- `docs/schema.md` — the data model defended: relationships, constraints and
+  the `EXPLAIN` output behind every index
 - `scripts/setup-db.sh` — creates the database and loads the schema
 - `scripts/create-admin.php` — creates the first administrator
 - `scripts/verify-api.sh` — end-to-end assertions against a running API
@@ -89,14 +91,13 @@ curl http://localhost:8080/api/health
 ### Demo accounts
 
 Created by `db/seed/`, which is loaded by Docker Compose and by
-`setup-db.sh --with-demo`. **Development only** — every account below shares
-the password `Password123`, and a production database never loads this file.
+`setup-db.sh --with-demo`. **Development only** — a production database never
+loads this file.
 
-| Email               | Role    |
-| ------------------- | ------- |
-| `saif@example.com`  | `admin` |
-| `priya@example.com` | `user`  |
-| `rahul@example.com` | `user`  |
+| Email                    | Password          | Role    |
+| ------------------------ | ----------------- | ------- |
+| `saifidrisi77@gmail.com` | `A97mfr2ULBzzt7H` | `admin` |
+| `rahul@wrap2earn.com`    | `Admin@123`       | `user`  |
 
 ## Deploying
 
@@ -226,7 +227,7 @@ self-registration cannot mint an admin.
 ### `POST /api/auth/login`
 
 ```json
-{ "email": "saif@example.com", "password": "Password123" }
+{ "email": "saifidrisi77@gmail.com", "password": "A97mfr2ULBzzt7H" }
 ```
 
 Returns `200` with the same shape. A wrong password and an unregistered email
@@ -294,7 +295,7 @@ and `/api/users` route requires a valid access token.
       "priority": "high",
       "due_date": "2026-09-20",
       "user_id": 1,
-      "owner": { "id": 1, "name": "Saif Idrisi", "email": "saif@example.com" },
+      "owner": { "id": 1, "name": "Saif Idrisi", "email": "saifidrisi77@gmail.com" },
       "created_at": "2026-09-18 07:15:02",
       "updated_at": "2026-09-18 07:15:02"
     }
@@ -413,7 +414,12 @@ round trip — the server never trusts it.
   reaches the SQL string.
 - **Pagination counts separately.** The list endpoint runs a `COUNT(*)` with the
   same filters as the page query so `meta.total` stays accurate, and sorts with
-  `id` as a tie-breaker so paging is stable when sort values repeat.
+  `id` as a tie-breaker so paging is stable when sort values repeat. The
+  tie-breaker follows the sort column's direction, because a mixed `ASC`/`DESC`
+  ordering cannot be served by one index and forces a filesort.
+- **Indexes are measured, not guessed.** Each one is tied to a query shape the
+  app issues, with the `EXPLAIN` output and the write cost recorded in
+  [`docs/schema.md`](docs/schema.md).
 - **Errors are typed.** `HttpException` and its subclasses carry the status code,
   so handlers throw and the single catch block in the front controller decides
   the response shape. Unexpected exceptions are logged and answered with a

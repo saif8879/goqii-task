@@ -36,9 +36,12 @@ services:
     container_name: taskmanager-api
     restart: unless-stopped
     environment:
-      # Service name on the Compose network, not the host value from .env.
-      DB_HOST: db
-      DB_PORT: "3306"
+      # Defaults to the db service on the Compose network. Point DB_HOST at an
+      # external server in .env to use one instead, and start the API on its
+      # own so the unused local database is not brought up with it:
+      #   docker compose up -d --no-deps api
+      DB_HOST: "${DB_HOST:-db}"
+      DB_PORT: "${DB_PORT:-3306}"
       DB_NAME: "${DB_NAME:?set DB_NAME in .env}"
       DB_USER: "${DB_USER:?set DB_USER in .env}"
       DB_PASS: "${DB_PASS:?set DB_PASS in .env}"
