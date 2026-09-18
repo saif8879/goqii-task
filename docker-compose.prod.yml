@@ -1,0 +1,62 @@
+# Production stack. Used on its own, not as an override of docker-compose.yml:
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Every difference from the development file is deliberate:
+#   - the application code is baked into the image instead of bind-mounted, so
+#     a running container cannot be edited in place
+#   - db/seed is never mounted, so the demo accounts do not exist here
+#   - nothing is published to a public interface. nginx terminates TLS on the
+#     host and proxies to the API over loopback.
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: taskmanager-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}"
+      MYSQL_DATABASE: "${DB_NAME:?set DB_NAME in .env}"
+      MYSQL_USER: "${DB_USER:?set DB_USER in .env}"
+      MYSQL_PASSWORD: "${DB_PASS:?set DB_PASS in .env}"
+    ports:
+      # Bound to loopback, not 0.0.0.0: the host's mysql client and
+      # scripts/verify-api.sh can reach it, the network cannot.
+      - "127.0.0.1:${DB_PORT_HOST:-3307}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      # Schema only. Loading db/seed here would put accounts with published
+      # passwords on a public host.
+      - ./db/init/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ./api
+    container_name: taskmanager-api
+    restart: unless-stopped
+    environment:
+      # Service name on the Compose network, not the host values from .env.
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: "${DB_NAME:?set DB_NAME in .env}"
+      DB_USER: "${DB_USER:?set DB_USER in .env}"
+      DB_PASS: "${DB_PASS:?set DB_PASS in .env}"
+      JWT_SECRET: "${JWT_SECRET:?set JWT_SECRET in .env}"
+      # Credentialed CORS forbids a wildcard, so this has to be the front end's
+      # exact origin. No default: a wrong value here fails silently at runtime.
+      CORS_ORIGIN: "${CORS_ORIGIN:?set CORS_ORIGIN to the front end's exact origin}"
+      COOKIE_SECURE: "${COOKIE_SECURE:-true}"
+      COOKIE_SAMESITE: "${COOKIE_SAMESITE:-Lax}"
+    ports:
+      - "127.0.0.1:${API_PORT:-8080}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

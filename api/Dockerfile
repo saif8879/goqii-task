@@ -11,3 +11,7 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
       /etc/apache2/conf-available/*.conf
 
 WORKDIR /var/www/html
+
+# The development stack mounts ./api over this, so the copy only takes effect
+# for a deployed image.
+COPY . /var/www/html
