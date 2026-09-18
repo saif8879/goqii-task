@@ -32,4 +32,7 @@ services:
     ports:
       # Loopback only. nginx terminates TLS on the host and proxies here, so
       # the API is never directly reachable from the network.
-      - "127.0.0.1:${API_PORT:-8080}:80"
+      #
+      # Not 8080: nginx publishes the API on 8080 itself, and it cannot bind
+      # 0.0.0.0:8080 while a container holds 127.0.0.1:8080.
+      - "127.0.0.1:${API_PORT:-9000}:80"
