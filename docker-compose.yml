@@ -1,0 +1,62 @@
+# Local development stack. Configuration comes from .env in this directory;
+# copy .env.example first. Compose fails fast on anything it cannot default.
+#
+# This file is not a production deployment: it mounts the source read-write and
+# loads demo data. See the deployment section of the README.
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: taskmanager-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}"
+      MYSQL_DATABASE: "${DB_NAME:?set DB_NAME in .env}"
+      MYSQL_USER: "${DB_USER:?set DB_USER in .env}"
+      MYSQL_PASSWORD: "${DB_PASS:?set DB_PASS in .env}"
+    ports:
+      # Published on a non-standard host port so it cannot collide with a local
+      # MySQL install.
+      - "${DB_PORT_HOST:-3307}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      # Mounted individually and renamed so the execution order is explicit:
+      # schema, then demo data. A production database loads db/init only.
+      - ./db/init/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/seed/01_demo_data.sql:/docker-entrypoint-initdb.d/02_demo_data.sql:ro
+    healthcheck:
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ./api
+    container_name: taskmanager-api
+    restart: unless-stopped
+    environment:
+      # Service name on the Compose network, not the host value from .env.
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: "${DB_NAME:?set DB_NAME in .env}"
+      DB_USER: "${DB_USER:?set DB_USER in .env}"
+      DB_PASS: "${DB_PASS:?set DB_PASS in .env}"
+      # Generate with: openssl rand -hex 32
+      JWT_SECRET: "${JWT_SECRET:?set JWT_SECRET in .env}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:5173}"
+      # Local development is plain HTTP, so the Secure flag has to be off or the
+      # browser drops the refresh cookie. Leave it at the default in production.
+      COOKIE_SECURE: "${COOKIE_SECURE:-false}"
+      COOKIE_SAMESITE: "${COOKIE_SAMESITE:-Lax}"
+    ports:
+      - "${API_PORT:-8080}:80"
+    volumes:
+      # Live source mount: development only. A deployable image copies the code.
+      - ./api:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

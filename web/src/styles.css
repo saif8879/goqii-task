@@ -1,0 +1,413 @@
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --border: #dfe1e6;
+  --text: #172b4d;
+  --muted: #6b778c;
+  --accent: #0052cc;
+  --danger: #bf2600;
+  --radius: 6px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.app {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+.app__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.app__identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* The width and height attributes carry the file's intrinsic 251x258 so the
+   browser reserves the right space before the image loads; the height here is
+   what actually sizes it, with width following the aspect ratio. */
+.app__logo {
+  display: block;
+  height: 36px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.app__identity > div {
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
+}
+
+.app__header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.app__subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+/* Filters */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.filters__search {
+  flex: 1 1 200px;
+}
+
+/* Form controls */
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  padding: 7px 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+textarea {
+  resize: vertical;
+}
+
+.button {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 14px;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.button--ghost {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.button--danger {
+  color: var(--danger);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* Task form */
+
+.task-form h2 {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+  flex: 1;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.field__error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.task-form__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Task table */
+
+.tasks {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tasks th {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.tasks td {
+  padding: 12px 10px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+
+.tasks tr:last-child td {
+  border-bottom: none;
+}
+
+.tasks tr.is-busy {
+  opacity: 0.5;
+}
+
+.tasks__title {
+  font-weight: 600;
+}
+
+.tasks__description {
+  max-width: 44ch;
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.tasks__due.is-overdue {
+  color: var(--danger);
+}
+
+.tasks__overdue-flag {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tasks__actions {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  background: #ebecf0;
+}
+
+.badge--low {
+  background: #e3fcef;
+  color: #006644;
+}
+
+.badge--medium {
+  background: #fffae6;
+  color: #974f0c;
+}
+
+.badge--high {
+  background: #ffebe6;
+  color: var(--danger);
+}
+
+/* Feedback */
+
+.alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+
+.alert--error {
+  color: var(--danger);
+  background: #ffebe6;
+  border: 1px solid #ffbdad;
+}
+
+.state {
+  margin: 0;
+  padding: 24px 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Account strip in the header */
+
+.app__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.badge--role-admin {
+  background: #deebff;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.badge--role-user {
+  background: #ebecf0;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+/* Login and register screens */
+
+.auth-screen {
+  display: flex;
+  justify-content: center;
+  padding: 72px 20px;
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 380px;
+  margin-bottom: 0;
+}
+
+.auth-form__logo {
+  display: block;
+  height: 56px;
+  width: auto;
+  margin: 0 auto 20px;
+}
+
+.auth-form h1 {
+  margin: 0;
+  font-size: 20px;
+  text-align: center;
+}
+
+.auth-form__hint {
+  margin: 4px 0 20px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.auth-form .button[type='submit'] {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.auth-form__switch {
+  margin: 16px 0 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+.auth-form__switch a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Pagination */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  margin-top: 6px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

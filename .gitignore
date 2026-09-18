@@ -1,0 +1,10 @@
+node_modules/
+dist/
+
+# Secrets. The example file is the only env file that belongs in the repo.
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
